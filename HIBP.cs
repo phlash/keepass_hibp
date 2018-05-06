@@ -1,4 +1,7 @@
-// Fed up trying to intercept mono System.Net.Http:HttpClient.. easier to rewite the plugin!
+// Original by Andrew Schofield: https://github.com/andrew-schofield/keepass2-haveibeenpwned
+//
+// This very cut-down version thrown together by Phlash because Debian 9 doesn't have a TLS1.2 capable mono runtime (seriously!)
+
 using System;
 using System.Linq;
 using System.Diagnostics;
@@ -15,12 +18,12 @@ using KeePassLib;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Phlash")]
 [assembly: AssemblyProduct("KeePass Plugin")]
-[assembly: AssemblyCopyright("Public Domain")]
+[assembly: AssemblyCopyright("Phil Ashby")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
 
 namespace HIBP {
     public sealed class HIBPExt : Plugin {
