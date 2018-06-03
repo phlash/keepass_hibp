@@ -68,14 +68,33 @@ namespace HIBP {
                  if(entry.Strings.Get(PwDefs.PasswordField) == null || string.IsNullOrWhiteSpace(entry.Strings.ReadSafe(PwDefs.PasswordField)) || entry.Strings.ReadSafe(PwDefs.PasswordField).StartsWith("{REF:")) continue;
                  var passwordHash = string.Join("", sha.ComputeHash(entry.Strings.Get(PwDefs.PasswordField).ReadUtf8()).Select(x => x.ToString("x2"))).ToUpperInvariant();
                  var prefix = passwordHash.Substring(0, 5);
-                 _host.MainWindow.SetStatusEx(string.Format("{0} of {1} entries: {2}/{3}", cnt, entries.Count(), entry.Strings.ReadSafe(PwDefs.TitleField), prefix));
+                 string stat = string.Format("{0} of {1} entries: {2}/{3}", cnt, entries.Count(), entry.Strings.ReadSafe(PwDefs.TitleField), prefix);
                  string url = string.Format(api, prefix);
-                 ProcessStartInfo psi = new ProcessStartInfo("wget", string.Format("-q -O - {0}", url));
-                 psi.UseShellExecute = false;
-                 psi.RedirectStandardOutput = true;
-                 Process wget = Process.Start(psi);
+                 ProcessStartInfo pcurl = new ProcessStartInfo("curl", string.Format("-s {0}", url));
+                 ProcessStartInfo pwget = new ProcessStartInfo("wget", string.Format("-q -O - {0}", url));
+                 pcurl.UseShellExecute = false;
+                 pcurl.RedirectStandardOutput = true;
+                 pwget.UseShellExecute = false;
+                 pwget.RedirectStandardOutput = true;
+                 // We try curl first, then wget
+                 Process fetch = null;
+                 try {
+                    fetch = Process.Start(pcurl);
+                 } catch (Exception e) {}
+                 if (null == fetch || fetch.HasExited) {
+                    _host.MainWindow.SetStatusEx(stat + " (wget)");
+                    try {
+                        fetch = Process.Start(pwget);
+                    } catch (Exception e) {}
+                 } else {
+                     _host.MainWindow.SetStatusEx(stat + " (curl)");
+                 }
+                 if (null == fetch || fetch.HasExited) {
+                     MessageBox.Show(_host.MainWindow, "Unable to find curl or wget - please install one :)", "Sorry", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     break;
+                 }
                  string line;
-                 while ((line = await wget.StandardOutput.ReadLineAsync()) != null) {
+                 while ((line = await fetch.StandardOutput.ReadLineAsync()) != null) {
                      var parts = line.Split(':');
                      var suffx = parts[0];
                      var count = parts[1];
@@ -87,8 +106,8 @@ namespace HIBP {
                              "\noccurances: " + count,
                              "Pwned!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                  }
-                 wget.WaitForExit();
-                 wget.Close();
+                 fetch.WaitForExit();
+                 fetch.Close();
             }
             _host.MainWindow.SetStatusEx("HIBP check done.");
             lock (_running) {
