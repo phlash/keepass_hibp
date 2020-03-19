@@ -22,8 +22,8 @@ using KeePassLib;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.1.0.2")]
-[assembly: AssemblyFileVersion("1.1.0.2")]
+[assembly: AssemblyVersion("1.1.1.0")]
+[assembly: AssemblyFileVersion("1.1.1.0")]
 
 namespace HIBP {
     public sealed class HIBPExt : Plugin {
@@ -70,10 +70,10 @@ namespace HIBP {
                  var prefix = passwordHash.Substring(0, 5);
                  string stat = string.Format("{0} of {1} entries: {2}/{3}", cnt, entries.Count(), entry.Strings.ReadSafe(PwDefs.TitleField), prefix);
                  string url = string.Format(api, prefix);
-                 // -s:silent, -f:fail quietly, -m <secs>:maximum timeout
-                 ProcessStartInfo pcurl = new ProcessStartInfo("curl", string.Format("-s -f -m 30 {0}", url));
-                 // -q:quiet, -O -:output to stdout, -T <secs>:maximum timeout
-                 ProcessStartInfo pwget = new ProcessStartInfo("wget", string.Format("-q -O - -T 30 {0}", url));
+                 // -s:silent, -f:fail quietly, -m <secs>:maximum timeout -H "Add-Padding: true"
+                 ProcessStartInfo pcurl = new ProcessStartInfo("curl", string.Format("-s -f -m 30 -H \"Add-Padding: true\" {0}", url));
+                 // -q:quiet, -O -:output to stdout, -T <secs>:maximum timeout --header="Add-Padding: true"
+                 ProcessStartInfo pwget = new ProcessStartInfo("wget", string.Format("-q -O - -T 30 --header=\"Add-Padding: true\" {0}", url));
                  pcurl.UseShellExecute = false;
                  pcurl.RedirectStandardOutput = true;
                  pwget.UseShellExecute = false;
@@ -100,7 +100,7 @@ namespace HIBP {
                      var parts = line.Split(':');
                      var suffx = parts[0];
                      var count = parts[1];
-                     if (prefix + suffx == passwordHash)
+                     if (count != "0" && (prefix + suffx == passwordHash))
                          MessageBox.Show(_host.MainWindow,
                              entry.Strings.ReadSafe(PwDefs.TitleField) +
                              "\nuser: " + entry.Strings.ReadSafe(PwDefs.UserNameField) +
